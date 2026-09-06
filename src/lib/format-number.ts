@@ -16,5 +16,12 @@ export function formatNumber(value: number | string): string {
   const numeric = typeof value === "string" ? Number(value) : value;
   if (Number.isNaN(numeric)) return "";
   if (numeric < 1000) return String(numeric);
-  return formatter.format(numeric);
+
+  const formatted = formatter.format(numeric);
+  if (formatted.includes("e")) {
+    return numeric.toLocaleString("en-US", {
+      maximumFractionDigits: 0,
+    });
+  }
+  return formatted;
 }

@@ -2,10 +2,10 @@ import { useEffect, useId, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { useWatch } from "react-hook-form";
 import type { UseFormReturn } from "react-hook-form";
-import { CURRENCIES } from "../../../lib/constants";
 import type { ConverterFormValues } from "../schemas/converter-schema";
 import { CurrencyPicker } from "./currency-picker";
 import { CurrencyFlag } from "./currency-flag";
+import { useCurrencies } from "../hooks/use-currencies";
 
 interface CurrencySelectProps {
   field: "from" | "to";
@@ -71,7 +71,8 @@ export function CurrencySelect({ field, form }: CurrencySelectProps) {
 }
 
 function Flag({ code }: { code: string }) {
-  const currency = CURRENCIES.find((item) => item.code === code);
+  const { data: currencies } = useCurrencies();
+  const currency = currencies?.find((item) => item.code === code);
   if (!currency) return null;
   return <CurrencyFlag currency={currency} />;
 }

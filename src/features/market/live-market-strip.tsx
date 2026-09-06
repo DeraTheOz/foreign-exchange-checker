@@ -1,6 +1,9 @@
+import { useMarketRates } from "./hooks/use-market-rates";
 import { MarketRateGroup } from "./market-rate-group";
 
 export function LiveMarketStrip() {
+  const { rates } = useMarketRates();
+
   return (
     <section className="relative flex min-h-10 overflow-hidden bg-neutral-700">
       <div className="relative z-10 flex shrink-0 items-center gap-2 bg-primary px-4 py-3 text-neutral-900">
@@ -14,8 +17,8 @@ export function LiveMarketStrip() {
       </div>
       <div className="absolute inset-0 overflow-hidden">
         <div className="live-market-marquee flex w-max">
-          <MarketRateGroup />
-          <MarketRateGroup ariaHidden />
+          <MarketRateGroup rates={rates} />
+          <MarketRateGroup rates={rates} ariaHidden />
         </div>
       </div>
     </section>

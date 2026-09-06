@@ -1,22 +1,26 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
+import { useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   converterSchema,
   DEFAULT_CONVERTER_VALUES,
   type ConverterFormValues,
 } from "../schemas/converter-schema";
+import { useExchangeRate } from "../hooks/use-exchange-rate";
+import { formatNumber } from "../../../lib/format-number";
 import { CurrencyPanel } from "./currency-panel";
 import { SwapButton } from "./swap-button";
 import { ActionButtons } from "./action-buttons";
 
-interface ConversionFormProps {
-  rate?: string;
+const MAX_DECIMALS = 6;
+
+function roundConverted(value: number, decimals: number): string {
+  const factor = 10 ** decimals;
+  return String(Math.round(value * factor) / factor);
 }
 
-export function ConversionForm({
-  rate = "1 USD = 0.8530 EUR",
-}: ConversionFormProps) {
+export function ConversionForm() {
   const form = useForm<ConverterFormValues>({
     resolver: zodResolver(converterSchema),
     defaultValues: DEFAULT_CONVERTER_VALUES,
@@ -24,15 +28,33 @@ export function ConversionForm({
 
   const [amount, setAmount] = useState("");
 
+  const from = useWatch({ control: form.control, name: "from" });
+  const to = useWatch({ control: form.control, name: "to" });
+
+  const { data: rateData, isLoading, error } = useExchangeRate(from, to);
+
+  const rate = rateData?.rate ?? 1;
+
+  const convertedAmount = useMemo(() => {
+    const numericAmount = Number(amount);
+    if (Number.isNaN(numericAmount) || amount === "") return "";
+    return roundConverted(numericAmount * rate, MAX_DECIMALS);
+  }, [amount, rate]);
+
+  const rateString = useMemo(() => {
+    if (from === to) return `1 ${from} = 1 ${to}`;
+    return `1 ${from} = ${formatNumber(rate)} ${to}`;
+  }, [from, to, rate]);
+
   const handleAmountChange = (raw: string) => {
     setAmount(raw);
     form.setValue("amount", raw);
   };
 
   const swap = () => {
-    const { from, to } = form.getValues();
-    form.setValue("from", to);
-    form.setValue("to", from);
+    const { from: f, to: t } = form.getValues();
+    form.setValue("from", t);
+    form.setValue("to", f);
   };
 
   return (
@@ -54,7 +76,7 @@ export function ConversionForm({
         <CurrencyPanel
           label="RECEIVE"
           field="to"
-          value={amount}
+          value={convertedAmount}
           form={form}
           readOnly
         />
@@ -62,7 +84,13 @@ export function ConversionForm({
 
       <div className="flex flex-col items-center gap-5 px-6 py-4 border-t border-dashed border-neutral-400 sm:flex-row">
         <p className="m-0 min-w-0 text-xs leading-tight tracking-widest text-neutral-50 sm:mr-auto">
-          {rate}
+          {isLoading ? (
+            <span className="text-neutral-400">Loading rate…</span>
+          ) : error ? (
+            <span className="text-error">Unable to fetch rate</span>
+          ) : (
+            rateString
+          )}
         </p>
         <ActionButtons onFavorite={() => {}} onLog={() => {}} />
       </div>
