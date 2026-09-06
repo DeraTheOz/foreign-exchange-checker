@@ -1,6 +1,6 @@
 import { Search } from "lucide-react";
 import { useMemo, useState } from "react";
-import { CURRENCIES } from "../../../lib/constants";
+import { useCurrencies } from "../hooks/use-currencies";
 import { CurrencySection } from "./currency-section";
 
 const POPULAR_CODES = ["USD", "EUR", "GBP"];
@@ -17,18 +17,20 @@ export function CurrencyPicker({
   listId,
 }: CurrencyPickerProps) {
   const [search, setSearch] = useState("");
+  const { data: currencies, isLoading } = useCurrencies();
 
   const filteredCurrencies = useMemo(() => {
+    if (!currencies) return [];
     const query = search.trim().toLowerCase();
-    if (!query) return CURRENCIES;
+    if (!query) return currencies;
 
-    return CURRENCIES.filter((currency) => {
+    return currencies.filter((currency) => {
       return (
         currency.code.toLowerCase().includes(query) ||
         currency.name.toLowerCase().includes(query)
       );
     });
-  }, [search]);
+  }, [currencies, search]);
 
   const popularCurrencies = filteredCurrencies.filter((currency) =>
     POPULAR_CODES.includes(currency.code),
@@ -44,6 +46,7 @@ export function CurrencyPicker({
         <span className="sr-only">Search currencies</span>
         <input
           type="search"
+          autoFocus
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Search currencies..."
@@ -56,23 +59,31 @@ export function CurrencyPicker({
         role="listbox"
         aria-label="Currencies"
         className="mt-2 flex max-h-98.5 flex-col gap-1 overflow-y-auto overflow-x-hidden no-scrollbar">
-        <CurrencySection
-          title="POPULAR"
-          currencies={popularCurrencies}
-          selectedCode={selectedCode}
-          onSelect={onSelect}
-        />
-        <CurrencySection
-          title="OTHER CURRENCIES"
-          currencies={otherCurrencies}
-          selectedCode={selectedCode}
-          onSelect={onSelect}
-        />
-        {filteredCurrencies.length === 0 ? (
+        {isLoading ? (
           <p className="px-2 py-5 text-center text-xs leading-tight tracking-[0.5px] text-neutral-200">
-            No currencies found
+            Loading currencies…
           </p>
-        ) : null}
+        ) : (
+          <>
+            <CurrencySection
+              title="POPULAR"
+              currencies={popularCurrencies}
+              selectedCode={selectedCode}
+              onSelect={onSelect}
+            />
+            <CurrencySection
+              title="OTHER CURRENCIES"
+              currencies={otherCurrencies}
+              selectedCode={selectedCode}
+              onSelect={onSelect}
+            />
+            {filteredCurrencies.length === 0 ? (
+              <p className="px-2 py-5 text-center text-xs leading-tight tracking-[0.5px] text-neutral-200">
+                No currencies found
+              </p>
+            ) : null}
+          </>
+        )}
       </div>
     </div>
   );
