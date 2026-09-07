@@ -2,6 +2,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
+import { devAiPlugin } from "./server/dev-ai-plugin.js";
 
 export default defineConfig({
   plugins: [
@@ -56,5 +57,6 @@ export default defineConfig({
         enabled: true,
       },
     }),
+    devAiPlugin(),
   ],
 });
