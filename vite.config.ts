@@ -5,6 +5,36 @@ import { VitePWA } from "vite-plugin-pwa";
 import { devAiPlugin } from "./server/dev-ai-plugin.js";
 
 export default defineConfig({
+  build: {
+    rolldownOptions: {
+      output: {
+        advancedChunks: {
+          groups: [
+            {
+              name: "react-vendor",
+              test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/,
+              priority: 20,
+            },
+            {
+              name: "router",
+              test: /node_modules[\\/]react-router[\\/]/,
+              priority: 10,
+            },
+            {
+              name: "forms",
+              test: /node_modules[\\/](react-hook-form|@hookform|zod)[\\/]/,
+              priority: 10,
+            },
+            {
+              name: "data-vendor",
+              test: /node_modules[\\/](@tanstack|zustand)[\\/]/,
+              priority: 10,
+            },
+          ],
+        },
+      },
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),
