@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef } from "react";
 import { ChevronDown } from "lucide-react";
 import { useWatch } from "react-hook-form";
 import type { UseFormReturn } from "react-hook-form";
@@ -13,9 +13,12 @@ interface CurrencySelectProps {
 }
 
 export function CurrencySelect({ field, form }: CurrencySelectProps) {
-  const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const listId = useId();
+
+  const open = useConverterStore((s) => s.pickerTarget) === field;
+  const setPickerTarget = useConverterStore((s) => s.setPickerTarget);
+  const closePicker = useConverterStore((s) => s.closePicker);
 
   const selected = useWatch({ control: form.control, name: field });
   const setFrom = useConverterStore((s) => s.setFrom);
@@ -25,11 +28,11 @@ export function CurrencySelect({ field, form }: CurrencySelectProps) {
     if (!open) return;
     const handleClick = (event: MouseEvent) => {
       if (!containerRef.current?.contains(event.target as Node)) {
-        setOpen(false);
+        closePicker();
       }
     };
     const handleKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") closePicker();
     };
     document.addEventListener("mousedown", handleClick);
     document.addEventListener("keydown", handleKey);
@@ -37,7 +40,7 @@ export function CurrencySelect({ field, form }: CurrencySelectProps) {
       document.removeEventListener("mousedown", handleClick);
       document.removeEventListener("keydown", handleKey);
     };
-  }, [open]);
+  }, [open, closePicker]);
 
   const selectCurrency = (code: string) => {
     form.setValue(field, code);
@@ -46,14 +49,22 @@ export function CurrencySelect({ field, form }: CurrencySelectProps) {
     } else {
       setTo(code);
     }
-    setOpen(false);
+    closePicker();
+  };
+
+  const togglePicker = () => {
+    if (open) {
+      closePicker();
+    } else {
+      setPickerTarget(field);
+    }
   };
 
   return (
     <div ref={containerRef} className="relative min-w-24 flex-[1_0_6rem]">
       <button
         type="button"
-        onClick={() => setOpen((value) => !value)}
+        onClick={togglePicker}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={listId}
