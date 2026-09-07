@@ -4,6 +4,7 @@ import { TabsNav } from "./components/tabs-nav";
 import { ComparePanel } from "./components/compare-panel";
 import { FavoritesPanel } from "./components/favorites-panel";
 import { LogPanel } from "./components/log-panel";
+import { AiAnalysisPanel } from "../ai-analyst/components/ai-analysis-panel";
 
 const HistoryPanel = lazy(() =>
   import("./components/history-panel").then((module) => ({
@@ -36,6 +37,7 @@ export function DetailsPanel() {
         {activeTab === "compare" && <ComparePanel />}
         {activeTab === "favorites" && <FavoritesPanel />}
         {activeTab === "log" && <LogPanel />}
+        {activeTab === "ai" && <AiAnalysisPanel />}
       </div>
     </div>
   );

@@ -13,6 +13,7 @@ const TABS: TabItem[] = [
   { id: "compare", label: "COMPARE", showCount: false },
   { id: "favorites", label: "FAVORITES", showCount: true },
   { id: "log", label: "LOG", showCount: true },
+  { id: "ai", label: "AI ANALYST", showCount: false },
 ];
 
 export function TabsNav() {
@@ -26,6 +27,7 @@ export function TabsNav() {
     compare: 0,
     favorites: favoritesCount,
     log: logCount,
+    ai: 0,
   };
 
   return (

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type InsightTab = "history" | "compare" | "favorites" | "log";
+export type InsightTab = "history" | "compare" | "favorites" | "log" | "ai";
 
 interface InsightsState {
   activeTab: InsightTab;
