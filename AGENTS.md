@@ -13,7 +13,6 @@ The application allows users to:
 - Export conversion history as CSV.
 - Share conversion pairs through URL parameters.
 - Use keyboard shortcuts for faster navigation.
-- Switch between light and dark themes.
 - Access cached exchange rates when API requests fail.
 - Generate AI-powered exchange rate analysis from historical data.
 
@@ -154,7 +153,6 @@ The URL is the source of truth for:
 
 Persist:
 
-- theme
 - favorites
 - conversion history
 
@@ -285,13 +283,6 @@ Historical charts should:
 - Be responsive.
 - Show meaningful tooltips.
 
-Suggested ranges:
-
-- 7 days
-- 30 days
-- 90 days
-- 1 year
-
 ---
 
 ### CSV Export
@@ -310,11 +301,6 @@ Support:
 
 - Ctrl/Cmd + K → Open currency search
 - S → Swap currencies
-- 1 → 7-day chart
-- 2 → 30-day chart
-- 3 → 90-day chart
-- 4 → 1-year chart
-- ? → Open shortcuts help dialog
 
 ---
 
@@ -343,46 +329,3 @@ Every implementation should balance:
 - Production readiness
 
 Avoid over-engineering.
-
----
-
-## Project Rules
-
-### Rule 1: Input Sanitization at Component Boundary
-
-All numeric input fields must sanitize values at the component boundary before updating state. The `AmountInput` component demonstrates this pattern:
-
-- Strip non-numeric characters except decimal points
-- Prevent multiple decimal points
-- Preserve decimal input without truncation
-- Format display values using `Intl.NumberFormat`
-
-Never trust raw user input. Always validate and sanitize in the `onChange` handler before calling state setters or form `setValue`.
-
----
-
-### Rule 2: Type-Safe Currency Validation
-
-Currency codes must be validated against a centralized constant array using Zod schemas. Never hardcode currency options in components:
-
-- Define `CURRENCIES` array in `src/lib/constants.ts`
-- Derive validation schemas from this array: `z.enum(currencyCodes)`
-- Use TypeScript types derived from Zod schemas for form values
-- Ensure `COUNTRY_CODE` mapping covers all currencies for flag resolution
-
-This prevents runtime errors from invalid currency selections and ensures consistency across the application.
-
----
-
-### Rule 3: Accessibility-First Component Design
-
-Every interactive component must implement ARIA patterns before adding visual styling:
-
-- Custom dropdowns: `aria-haspopup`, `aria-expanded`, `aria-controls`, `aria-label`
-- List items: `role="option"`, `aria-selected`
-- Decorative images: `alt=""` with `aria-hidden`
-- Search inputs: Include `sr-only` labels for screen readers
-- Focus states: Use `focus-visible:outline` with visible color contrast
-- Animations: Respect `prefers-reduced-motion` media query
-
-Test with keyboard navigation (Tab, Escape, Enter) before considering a component complete.
