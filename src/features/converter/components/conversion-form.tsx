@@ -1,24 +1,17 @@
-import { useState, useMemo } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   converterSchema,
   DEFAULT_CONVERTER_VALUES,
   type ConverterFormValues,
 } from "../schemas/converter-schema";
-import { useExchangeRate } from "../hooks/use-exchange-rate";
-import { formatNumber } from "../../../lib/format-number";
+import { useConversion } from "../hooks/use-conversion";
+import { useConversionActions } from "../hooks/use-conversion-actions";
 import { CurrencyPanel } from "./currency-panel";
 import { SwapButton } from "./swap-button";
 import { ActionButtons } from "./action-buttons";
-
-const MAX_DECIMALS = 6;
-
-function roundConverted(value: number, decimals: number): string {
-  const factor = 10 ** decimals;
-  return String(Math.round(value * factor) / factor);
-}
+import { useConverterStore } from "../store/converter-store";
 
 export function ConversionForm() {
   const form = useForm<ConverterFormValues>({
@@ -26,25 +19,28 @@ export function ConversionForm() {
     defaultValues: DEFAULT_CONVERTER_VALUES,
   });
 
-  const [amount, setAmount] = useState("");
+  const amount = useConverterStore((s) => s.amount);
+  const setAmount = useConverterStore((s) => s.setAmount);
+  const from = useConverterStore((s) => s.from);
+  const to = useConverterStore((s) => s.to);
+  const swapPair = useConverterStore((s) => s.swap);
 
-  const from = useWatch({ control: form.control, name: "from" });
-  const to = useWatch({ control: form.control, name: "to" });
+  useEffect(() => {
+    form.setValue("from", from);
+  }, [from, form]);
 
-  const { data: rateData, isLoading, error } = useExchangeRate(from, to);
+  useEffect(() => {
+    form.setValue("to", to);
+  }, [to, form]);
 
-  const rate = rateData?.rate ?? 1;
+  const { convertedAmount, rateString, isLoading, error } = useConversion(
+    from,
+    to,
+    amount,
+  );
 
-  const convertedAmount = useMemo(() => {
-    const numericAmount = Number(amount);
-    if (Number.isNaN(numericAmount) || amount === "") return "";
-    return roundConverted(numericAmount * rate, MAX_DECIMALS);
-  }, [amount, rate]);
-
-  const rateString = useMemo(() => {
-    if (from === to) return `1 ${from} = 1 ${to}`;
-    return `1 ${from} = ${formatNumber(rate)} ${to}`;
-  }, [from, to, rate]);
+  const { isFavorited, isLogged, handleFavorite, handleLog } =
+    useConversionActions({ from, to, amount, convertedAmount });
 
   const handleAmountChange = (raw: string) => {
     setAmount(raw);
@@ -52,9 +48,7 @@ export function ConversionForm() {
   };
 
   const swap = () => {
-    const { from: f, to: t } = form.getValues();
-    form.setValue("from", t);
-    form.setValue("to", f);
+    swapPair();
   };
 
   return (
@@ -92,7 +86,12 @@ export function ConversionForm() {
             rateString
           )}
         </p>
-        <ActionButtons onFavorite={() => {}} onLog={() => {}} />
+        <ActionButtons
+          isFavorited={isFavorited}
+          isLogged={isLogged}
+          onFavorite={handleFavorite}
+          onLog={handleLog}
+        />
       </div>
     </form>
   );

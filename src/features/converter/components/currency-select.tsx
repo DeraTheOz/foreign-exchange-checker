@@ -4,8 +4,8 @@ import { useWatch } from "react-hook-form";
 import type { UseFormReturn } from "react-hook-form";
 import type { ConverterFormValues } from "../schemas/converter-schema";
 import { CurrencyPicker } from "./currency-picker";
-import { CurrencyFlag } from "./currency-flag";
-import { useCurrencies } from "../hooks/use-currencies";
+import { useConverterStore } from "../store/converter-store";
+import { Flag } from "./flag";
 
 interface CurrencySelectProps {
   field: "from" | "to";
@@ -18,6 +18,8 @@ export function CurrencySelect({ field, form }: CurrencySelectProps) {
   const listId = useId();
 
   const selected = useWatch({ control: form.control, name: field });
+  const setFrom = useConverterStore((s) => s.setFrom);
+  const setTo = useConverterStore((s) => s.setTo);
 
   useEffect(() => {
     if (!open) return;
@@ -39,6 +41,11 @@ export function CurrencySelect({ field, form }: CurrencySelectProps) {
 
   const selectCurrency = (code: string) => {
     form.setValue(field, code);
+    if (field === "from") {
+      setFrom(code);
+    } else {
+      setTo(code);
+    }
     setOpen(false);
   };
 
@@ -68,11 +75,4 @@ export function CurrencySelect({ field, form }: CurrencySelectProps) {
       ) : null}
     </div>
   );
-}
-
-function Flag({ code }: { code: string }) {
-  const { data: currencies } = useCurrencies();
-  const currency = currencies?.find((item) => item.code === code);
-  if (!currency) return null;
-  return <CurrencyFlag currency={currency} />;
 }
