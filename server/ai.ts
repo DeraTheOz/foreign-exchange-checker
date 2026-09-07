@@ -92,6 +92,12 @@ function parseResponse(text: string): AiAnalysis {
   return { trendSummary, keyInsight };
 }
 
+function isRateLimitError(error: unknown): boolean {
+  const err = error as { status?: number; message?: string };
+  if (err.status === 429) return true;
+  return /RESOURCE_EXHAUSTED/i.test(err.message ?? "");
+}
+
 export async function generateAnalysis(
   request: AiAnalysisRequest,
   options: AiEndpointOptions,
@@ -137,6 +143,12 @@ export async function generateAnalysis(
       throw error;
     }
     console.error("[ai-analyst]", error instanceof Error ? error.message : error);
+    if (isRateLimitError(error)) {
+      throw new AiAnalysisError(
+        "The AI service hit its rate limit. Please wait a few minutes and try again.",
+        429,
+      );
+    }
     throw new AiAnalysisError("The AI service could not complete the analysis.", 502);
   }
 }

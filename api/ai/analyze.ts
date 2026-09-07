@@ -125,6 +125,12 @@ function parseResponse(text: string): AiAnalysis {
   return { trendSummary, keyInsight };
 }
 
+function isRateLimitError(error: unknown): boolean {
+  const err = error as { status?: number; message?: string };
+  if (err.status === 429) return true;
+  return /RESOURCE_EXHAUSTED/i.test(err.message ?? "");
+}
+
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse,
@@ -178,9 +184,24 @@ export default async function handler(
     const analysis = parseResponse(text);
     sendJson(res, 200, analysis);
   } catch (error) {
+    if (error instanceof Error) {
+      console.error("[ai-analyst]", error.message ?? error);
+      if (isRateLimitError(error)) {
+        sendJson(res, 429, {
+          message:
+            "The AI service hit its rate limit. Please wait a few minutes and try again.",
+        });
+        return;
+      }
+      sendJson(res, 502, {
+        message: "The AI service could not complete the analysis.",
+      });
+      return;
+    }
+
     const err = error as { status?: number; message?: string };
-    const status = err.status ?? 500;
-    const message = err.message ?? "AI analysis failed.";
-    sendJson(res, status, { message });
+    sendJson(res, err.status ?? 500, {
+      message: err.message ?? "AI analysis failed.",
+    });
   }
 }

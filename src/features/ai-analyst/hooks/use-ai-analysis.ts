@@ -11,7 +11,12 @@ async function requestAnalysis(payload: AiAnalysisRequest): Promise<AiAnalysisRe
 
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as { message?: string } | null;
-    throw new Error(body?.message ?? "The AI analyst could not complete the analysis.");
+    const message = body?.message?.trim();
+    const safeMessage =
+      message && message.length <= 200 && !/^\{.*\}$/s.test(message)
+        ? message
+        : "The AI analyst could not complete the analysis.";
+    throw new Error(safeMessage);
   }
 
   const parsed = aiAnalysisSchema.safeParse(await response.json());
