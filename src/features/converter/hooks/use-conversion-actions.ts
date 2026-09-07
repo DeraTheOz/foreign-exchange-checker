@@ -22,8 +22,9 @@ export function useConversionActions({
   );
 
   const addLogEntry = useConversionHistory((s) => s.addEntry);
+  const formattedAmount = formatNumber(amount);
   const isLogged = useConversionHistory((s) =>
-    convertedAmount !== "" ? s.isLogged(from, to, amount) : false,
+    convertedAmount !== "" ? s.isLogged(from, to, formattedAmount) : false,
   );
 
   const handleFavorite = useCallback(() => {
@@ -35,10 +36,10 @@ export function useConversionActions({
     addLogEntry({
       from,
       to,
-      amount: formatNumber(amount),
+      amount: formattedAmount,
       converted: formatNumber(convertedAmount),
     });
-  }, [from, to, amount, convertedAmount, isLogged, addLogEntry]);
+  }, [from, to, formattedAmount, convertedAmount, isLogged, addLogEntry]);
 
   return { isFavorited, isLogged, handleFavorite, handleLog };
 }
