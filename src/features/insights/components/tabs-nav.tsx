@@ -1,21 +1,32 @@
 import { useInsightsStore, type InsightTab } from "../store/insights-store";
+import { useFavoritesStore } from "../store/favorites-store";
+import { useConversionHistory } from "../store/conversion-history-store";
 
 interface TabItem {
   id: InsightTab;
   label: string;
-  count?: number;
+  showCount: boolean;
 }
 
 const TABS: TabItem[] = [
-  { id: "history", label: "HISTORY" },
-  { id: "compare", label: "COMPARE" },
-  { id: "favorites", label: "FAVORITES", count: 0 },
-  { id: "log", label: "LOG", count: 0 },
+  { id: "history", label: "HISTORY", showCount: false },
+  { id: "compare", label: "COMPARE", showCount: false },
+  { id: "favorites", label: "FAVORITES", showCount: true },
+  { id: "log", label: "LOG", showCount: true },
 ];
 
 export function TabsNav() {
   const activeTab = useInsightsStore((state) => state.activeTab);
   const setActiveTab = useInsightsStore((state) => state.setActiveTab);
+  const favoritesCount = useFavoritesStore((s) => s.favorites.length);
+  const logCount = useConversionHistory((s) => s.entries.length);
+
+  const counts: Record<InsightTab, number> = {
+    history: 0,
+    compare: 0,
+    favorites: favoritesCount,
+    log: logCount,
+  };
 
   return (
     <nav className="flex items-start gap-2 overflow-x-auto border-b border-neutral-600 no-scrollbar">
@@ -29,9 +40,9 @@ export function TabsNav() {
             activeTab === tab.id ? "border-b-primary" : "border-b-transparent"
           }`}>
           {tab.label}
-          {tab.count !== undefined ? (
+          {tab.showCount && counts[tab.id] > 0 ? (
             <span className="flex size-5 items-center justify-center rounded-full bg-lime-800 text-[10px] leading-none text-primary">
-              {tab.count}
+              {counts[tab.id]}
             </span>
           ) : null}
         </button>
