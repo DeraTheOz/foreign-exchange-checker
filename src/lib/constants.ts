@@ -162,6 +162,8 @@ const flagModules = import.meta.glob<string>("../assets/images/flags/*.webp", {
   import: "default",
 });
 
+export const CURRENCY_CODES: readonly string[] = Object.keys(COUNTRY_CODE);
+
 export const resolveFlag = (code: string) => {
   const countryCode = COUNTRY_CODE[code]?.toLowerCase();
   if (!countryCode) return "";

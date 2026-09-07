@@ -1,9 +1,14 @@
 import { Header } from "../components/layout/header";
 import { LiveMarketStrip } from "../features/market/live-market-strip";
 import { ConversionForm } from "../features/converter/components/conversion-form";
+import { useUrlState } from "../features/converter/hooks/use-url-state";
+import { useKeyboardShortcuts } from "../features/converter/hooks/use-keyboard-shortcuts";
 import { DetailsPanel } from "../features/insights/details-panel";
 
 export function HomeLayout() {
+  useUrlState();
+  useKeyboardShortcuts();
+
   return (
     <main className="min-h-screen bg-neutral-900 text-neutral-50">
       <Header />
