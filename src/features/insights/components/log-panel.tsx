@@ -1,8 +1,10 @@
+import { Download } from "lucide-react";
 import {
   useConversionHistory,
   type ConversionEntry,
 } from "../store/conversion-history-store";
 import { EmptyState } from "../../../components/common/empty-state";
+import { downloadConversionCsv } from "../utils/export-csv";
 import { LogRow } from "./log-row";
 
 export function LogPanel() {
@@ -33,6 +35,13 @@ export function LogPanel() {
           <p className="m-0 text-xs leading-tight tracking-widest text-neutral-50 opacity-70">
             {entries.length} logged
           </p>
+          <button
+            type="button"
+            onClick={() => downloadConversionCsv(entries)}
+            className="flex items-center gap-2 rounded-lg border border-neutral-400 bg-neutral-600 px-3 py-2 text-xs leading-tight tracking-wider text-neutral-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+            <Download className="size-3.5" aria-hidden />
+            Export CSV
+          </button>
           <button
             type="button"
             onClick={clearAll}
