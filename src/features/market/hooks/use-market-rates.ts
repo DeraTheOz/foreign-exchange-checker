@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { fetchLatestRate } from "../../../lib/frankfurter-api";
+import { readCachedRate, writeCachedRate } from "../../../lib/rate-cache";
 
 const FIVE_MINUTES = 5 * 60 * 1000;
 
@@ -54,10 +56,24 @@ export function useMarketRates() {
     ]),
   });
 
+  useEffect(() => {
+    results.forEach((result, i) => {
+      const rate = result.data?.rate;
+      if (rate == null || i % 2 !== 0) return;
+      const pair = MARKET_PAIRS[Math.floor(i / 2)];
+      if (pair) writeCachedRate(pair.base, pair.quote, rate);
+    });
+  }, [results]);
+
   const isLoading = results.some((r) => r.isLoading);
 
   const rates: LiveMarketRate[] = MARKET_PAIRS.map((pair, i) => {
-    const todayRate = results[i * 2]?.data?.rate;
+    const todayResult = results[i * 2];
+    const todayRate =
+      todayResult?.data?.rate ??
+      (todayResult?.isError
+        ? readCachedRate(pair.base, pair.quote)?.rate
+        : undefined);
     const yesterdayRate = results[i * 2 + 1]?.data?.rate;
 
     if (todayRate == null || yesterdayRate == null || yesterdayRate === 0) {

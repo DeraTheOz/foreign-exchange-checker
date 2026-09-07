@@ -1,12 +1,13 @@
 import { useMemo } from "react";
 import { useExchangeRate } from "./use-exchange-rate";
 import { formatNumber } from "../../../lib/format-number";
+import { formatStaleness } from "../../../lib/rate-cache";
 import { MAX_DECIMALS, roundConverted } from "../utils/amount";
 
 export function useConversion(from: string, to: string, amount: string) {
-  const { data: rateData, isLoading, error } = useExchangeRate(from, to);
+  const { data: rateData, isLoading, error, staleRate } = useExchangeRate(from, to);
 
-  const rate = rateData?.rate ?? 1;
+  const rate = rateData?.rate ?? staleRate?.rate ?? 1;
 
   const convertedAmount = useMemo(() => {
     const numericAmount = Number(amount);
@@ -19,5 +20,9 @@ export function useConversion(from: string, to: string, amount: string) {
     return `1 ${from} = ${formatNumber(rate)} ${to}`;
   }, [from, to, rate]);
 
-  return { rate, convertedAmount, rateString, isLoading, error };
+  const staleAgeLabel = staleRate
+    ? `Using exchange rates cached ${formatStaleness(staleRate.cachedAt)}.`
+    : null;
+
+  return { rate, convertedAmount, rateString, staleAgeLabel, isLoading, error };
 }

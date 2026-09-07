@@ -33,11 +33,8 @@ export function ConversionForm() {
     form.setValue("to", to);
   }, [to, form]);
 
-  const { convertedAmount, rateString, isLoading, error } = useConversion(
-    from,
-    to,
-    amount,
-  );
+  const { convertedAmount, rateString, staleAgeLabel, isLoading, error } =
+    useConversion(from, to, amount);
 
   const { isFavorited, isLogged, handleFavorite, handleLog } =
     useConversionActions({ from, to, amount, convertedAmount });
@@ -76,16 +73,23 @@ export function ConversionForm() {
         />
       </div>
 
-      <div className="flex flex-col items-center gap-5 px-6 py-4 border-t border-dashed border-neutral-400 sm:flex-row">
-        <p className="m-0 min-w-0 text-xs leading-tight tracking-widest text-neutral-50 sm:mr-auto">
-          {isLoading ? (
-            <span className="text-neutral-400">Loading rate…</span>
-          ) : error ? (
-            <span className="text-error">Unable to fetch rate</span>
-          ) : (
-            rateString
-          )}
-        </p>
+      <div className="flex flex-col items-center gap-3 px-6 py-4 border-t border-dashed border-neutral-400 sm:flex-row">
+        <div className="flex min-w-0 flex-col gap-1 sm:mr-auto">
+          <p className="m-0 min-w-0 text-xs leading-tight tracking-widest text-neutral-50">
+            {isLoading ? (
+              <span className="text-neutral-400">Loading rate…</span>
+            ) : error && !staleAgeLabel ? (
+              <span className="text-error">Unable to fetch rate</span>
+            ) : (
+              rateString
+            )}
+          </p>
+          {staleAgeLabel ? (
+            <p className="m-0 text-xs leading-tight tracking-widest text-neutral-200">
+              {staleAgeLabel}
+            </p>
+          ) : null}
+        </div>
         <ActionButtons
           isFavorited={isFavorited}
           isLogged={isLogged}

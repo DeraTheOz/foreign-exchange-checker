@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { fetchLatestRate } from "../../../lib/frankfurter-api";
+import { readCachedRate, writeCachedRate } from "../../../lib/rate-cache";
 import { useFavoritesStore } from "../store/favorites-store";
 
 const FIVE_MINUTES = 5 * 60 * 1000;
@@ -43,20 +45,34 @@ export function useFavoriteRates(): FavoriteRate[] {
     ]),
   });
 
+  useEffect(() => {
+    results.forEach((result, i) => {
+      const rate = result.data?.rate;
+      const pair = favorites[Math.floor(i / 2)];
+      if (rate == null || i % 2 !== 0 || !pair || pair.from === pair.to) return;
+      writeCachedRate(pair.from, pair.to, rate);
+    });
+  }, [results, favorites]);
+
   return favorites.map((pair, i) => {
     if (pair.from === pair.to) {
-      const todayRate = results[i]?.data?.rate;
+      const todayRate = results[i * 2]?.data?.rate;
       return {
         from: pair.from,
         to: pair.to,
         rate: todayRate ?? 1,
         change: "0.00%",
         direction: "up" as const,
-        isLoading: results[i]?.isLoading ?? true,
+        isLoading: results[i * 2]?.isLoading ?? true,
       };
     }
 
-    const todayRate = results[i * 2]?.data?.rate;
+    const todayResult = results[i * 2];
+    const todayRate =
+      todayResult?.data?.rate ??
+      (todayResult?.isError
+        ? readCachedRate(pair.from, pair.to)?.rate
+        : undefined);
     const yesterdayRate = results[i * 2 + 1]?.data?.rate;
     const isLoading = results[i * 2]?.isLoading || results[i * 2 + 1]?.isLoading;
 
