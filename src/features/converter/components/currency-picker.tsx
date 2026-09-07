@@ -1,9 +1,6 @@
 import { Search } from "lucide-react";
-import { useMemo, useState } from "react";
-import { useCurrencies } from "../hooks/use-currencies";
+import { useCurrencyPicker } from "../hooks/use-currency-picker";
 import { CurrencySection } from "./currency-section";
-
-const POPULAR_CODES = ["USD", "EUR", "GBP"];
 
 interface CurrencyPickerProps {
   selectedCode: string;
@@ -16,28 +13,14 @@ export function CurrencyPicker({
   onSelect,
   listId,
 }: CurrencyPickerProps) {
-  const [search, setSearch] = useState("");
-  const { data: currencies, isLoading } = useCurrencies();
-
-  const filteredCurrencies = useMemo(() => {
-    if (!currencies) return [];
-    const query = search.trim().toLowerCase();
-    if (!query) return currencies;
-
-    return currencies.filter((currency) => {
-      return (
-        currency.code.toLowerCase().includes(query) ||
-        currency.name.toLowerCase().includes(query)
-      );
-    });
-  }, [currencies, search]);
-
-  const popularCurrencies = filteredCurrencies.filter((currency) =>
-    POPULAR_CODES.includes(currency.code),
-  );
-  const otherCurrencies = filteredCurrencies.filter(
-    (currency) => !POPULAR_CODES.includes(currency.code),
-  );
+  const {
+    search,
+    setSearch,
+    isLoading,
+    filteredCurrencies,
+    popularCurrencies,
+    otherCurrencies,
+  } = useCurrencyPicker();
 
   return (
     <div className="w-[clamp(14rem,70vw,19.4375rem)] overflow-hidden rounded-lg border border-neutral-400 bg-neutral-600 p-2 normal-case shadow-[0_20px_60px_rgb(10_10_10/0.5)]">

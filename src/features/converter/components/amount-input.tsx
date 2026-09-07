@@ -1,24 +1,13 @@
 import type { CSSProperties } from "react";
 import { useRef, useEffect } from "react";
 import { formatNumber } from "../../../lib/format-number";
+import { sanitizeAmountInput } from "../utils/amount";
 
 interface AmountInputProps {
   label: string;
   value: string;
   readOnly?: boolean;
   onChange?: (raw: string) => void;
-}
-
-const MAX_INTEGER_DIGITS = 12;
-
-function sanitizeAmountInput(value: string) {
-  const sanitized = value.replace(/[^\d.]/g, "");
-  const [integer = "", ...fractionParts] = sanitized.split(".");
-  const cappedInteger = integer.slice(0, MAX_INTEGER_DIGITS);
-
-  if (fractionParts.length === 0) return cappedInteger;
-
-  return `${cappedInteger}.${fractionParts.join("")}`;
 }
 
 export function AmountInput({

@@ -117,6 +117,23 @@ a:focus-visible {
   }
 }
 
+.chart-enter {
+  opacity: 0;
+  animation: chart-enter 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes chart-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .live-market-marquee {
     animation: none;
@@ -125,5 +142,11 @@ a:focus-visible {
 
   .live-market-pulse {
     animation: none;
+  }
+
+  .chart-enter {
+    opacity: 1;
+    animation: none;
+    transform: none;
   }
 }
