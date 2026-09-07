@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LoaderCircle, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
 import { useConverterStore } from "../../converter/store/converter-store";
 import {
@@ -17,9 +17,14 @@ export function AiAnalysisPanel() {
   const to = useConverterStore((state) => state.to);
   const [range, setRange] = useState<HistoryRange>("1M");
 
-  const { data: rates, isLoading: isRatesLoading } = useHistoricalRates(from, to, range);
+  const { data: rates } = useHistoricalRates(from, to, range);
   const { stats } = useHistoryData(rates);
   const ai = useAiAnalysis();
+  const resetAnalysis = ai.reset;
+
+  useEffect(() => {
+    resetAnalysis();
+  }, [from, to, range, resetAnalysis]);
 
   const headingId = "ai-analysis-title";
   const canAnalyse = rates != null && stats != null && rates.length >= 2;
@@ -28,7 +33,17 @@ export function AiAnalysisPanel() {
     if (!canAnalyse) {
       return;
     }
-    ai.mutate(buildAnalysisPayload(from, to, range, rates, stats.open, stats.last, stats.pct));
+    ai.mutate(
+      buildAnalysisPayload(
+        from,
+        to,
+        range,
+        rates,
+        stats.open,
+        stats.last,
+        stats.pct,
+      ),
+    );
   };
 
   if (from === to) {
@@ -83,7 +98,9 @@ export function AiAnalysisPanel() {
         type="button"
         onClick={handleAnalyse}
         disabled={!canAnalyse || ai.isPending}
-        className="flex min-h-11 cursor-pointer items-center justify-center gap-3 rounded-2xl bg-primary px-5 text-sm leading-tight tracking-widest text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 disabled:cursor-not-allowed disabled:opacity-50">
+        className={`flex min-h-11 items-center justify-center gap-3 rounded-2xl bg-primary px-5 text-sm leading-tight tracking-widest text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-900 disabled:opacity-50 ${
+          ai.isPending || !canAnalyse ? "cursor-not-allowed" : "cursor-pointer"
+        }`}>
         {ai.isPending ? (
           <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
         ) : (
@@ -93,12 +110,6 @@ export function AiAnalysisPanel() {
           ? `Analyzing ${from}/${to} over the last ${range.toLowerCase()}…`
           : `Generate AI analysis for ${from}/${to}`}
       </button>
-
-      {isRatesLoading && (
-        <p className="m-0 text-xs leading-tight tracking-widest text-neutral-200">
-          Loading rate history…
-        </p>
-      )}
 
       <div aria-live="polite">
         {ai.isError && (
@@ -116,9 +127,15 @@ export function AiAnalysisPanel() {
             <article className="rounded-2xl border border-neutral-600 bg-neutral-700 p-5">
               <header className="flex items-center gap-2">
                 {stats && stats.direction === "down" ? (
-                  <TrendingDown className="size-4 text-error" aria-hidden="true" />
+                  <TrendingDown
+                    className="size-4 text-error"
+                    aria-hidden="true"
+                  />
                 ) : (
-                  <TrendingUp className="size-4 text-success" aria-hidden="true" />
+                  <TrendingUp
+                    className="size-4 text-success"
+                    aria-hidden="true"
+                  />
                 )}
                 <h3 className="m-0 text-xs leading-tight tracking-widest text-neutral-50 opacity-70">
                   TREND SUMMARY
@@ -142,7 +159,8 @@ export function AiAnalysisPanel() {
             </article>
 
             <p className="m-0 text-xs leading-tight tracking-widest text-neutral-200">
-              Analysis is based on historical data only and is not financial advice.
+              Analysis is based on historical data only and is not financial
+              advice.
             </p>
           </div>
         )}
