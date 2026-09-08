@@ -117,6 +117,15 @@ a:focus-visible {
   }
 }
 
+.recharts-wrapper,
+.recharts-wrapper *,
+.recharts-surface,
+.recharts-surface *:focus,
+.recharts-wrapper [tabindex],
+.recharts-wrapper :focus-visible {
+  outline: none;
+}
+
 .chart-enter {
   opacity: 0;
   animation: chart-enter 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
