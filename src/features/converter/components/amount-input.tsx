@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { useRef, useEffect } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { formatNumber } from "../../../lib/format-number";
 import { sanitizeAmountInput } from "../utils/amount";
 
@@ -17,12 +17,18 @@ export function AmountInput({
   onChange,
 }: AmountInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const cursorRef = useRef({ start: 0, end: 0 });
+  const digitsBeforeCaret = useRef<number | null>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = inputRef.current;
-    if (!el) return;
-    el.setSelectionRange(cursorRef.current.start, cursorRef.current.end);
+    const target = digitsBeforeCaret.current;
+    if (!el || target === null) return;
+    let caret = 0;
+    for (let seen = 0; caret < el.value.length && seen < target; caret++) {
+      if (/[\d.]/.test(el.value[caret])) seen++;
+    }
+    el.setSelectionRange(caret, caret);
+    digitsBeforeCaret.current = null;
   });
 
   const display = formatNumber(value);
@@ -38,12 +44,11 @@ export function AmountInput({
       aria-label={label}
       value={display}
       onChange={(event) => {
-        cursorRef.current = {
-          start: event.target.selectionStart ?? 0,
-          end: event.target.selectionEnd ?? 0,
-        };
-        const raw = sanitizeAmountInput(event.target.value);
-        onChange?.(raw);
+        const { value: raw, selectionStart } = event.target;
+        digitsBeforeCaret.current = raw
+          .slice(0, selectionStart ?? raw.length)
+          .replace(/[^\d.]/g, "").length;
+        onChange?.(sanitizeAmountInput(raw));
       }}
       style={
         {

@@ -2,6 +2,8 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { GoogleGenAI } from "@google/genai";
 
 const CURRENCY_CODE = /^[A-Z]{3}$/;
+const RANGES = new Set(["1D", "1W", "1M", "3M", "1Y", "5Y"]);
+const MAX_POINTS = 40;
 
 const SYSTEM_INSTRUCTION = [
   "You are a currency market analyst.",
@@ -33,6 +35,16 @@ function sendJson(res: VercelResponse, status: number, payload: unknown): void {
   res.status(status).json(payload);
 }
 
+function isValidPoint(point: unknown): point is { date: string; rate: number } {
+  if (!point || typeof point !== "object") return false;
+  const record = point as Record<string, unknown>;
+  return (
+    typeof record.rate === "number" &&
+    typeof record.date === "string" &&
+    /^\d{4}-\d{2}-\d{2}$/.test(record.date)
+  );
+}
+
 function parseRequest(body: unknown): AiAnalysisRequest {
   if (!body || typeof body !== "object") {
     throw { status: 400, message: "Invalid request body." };
@@ -50,8 +62,8 @@ function parseRequest(body: unknown): AiAnalysisRequest {
   if (!CURRENCY_CODE.test(base) || !CURRENCY_CODE.test(quote) || base === quote) {
     throw { status: 400, message: "Invalid currency pair." };
   }
-  if (!rangeLabel) {
-    throw { status: 400, message: "Missing range label." };
+  if (!RANGES.has(rangeLabel)) {
+    throw { status: 400, message: "Invalid range." };
   }
   if (!Number.isFinite(currentRate) || !Number.isFinite(openRate) || !Number.isFinite(changePct)) {
     throw { status: 400, message: "Invalid rate values." };
@@ -59,7 +71,7 @@ function parseRequest(body: unknown): AiAnalysisRequest {
   if (rates.length === 0) {
     throw { status: 400, message: "No historical data supplied." };
   }
-  if (rates.some((point: unknown) => !point || typeof point !== "object" || !("date" in point) || !("rate" in point))) {
+  if (rates.length > MAX_POINTS || rates.some((point) => !isValidPoint(point))) {
     throw { status: 400, message: "Invalid historical data points." };
   }
 

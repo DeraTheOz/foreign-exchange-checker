@@ -5,6 +5,8 @@ import type { AiAnalysisRequest, AiEndpointOptions } from "./ai.js";
 const MAX_BODY_BYTES = 256 * 1024;
 
 const CURRENCY_CODE = /^[A-Z]{3}$/;
+const RANGES = new Set(["1D", "1W", "1M", "3M", "1Y", "5Y"]);
+const MAX_POINTS = 40;
 
 function readBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -21,6 +23,16 @@ function readBody(req: IncomingMessage): Promise<string> {
     req.on("end", () => resolve(body));
     req.on("error", reject);
   });
+}
+
+function isValidPoint(point: unknown): point is { date: string; rate: number } {
+  if (!point || typeof point !== "object") return false;
+  const record = point as Record<string, unknown>;
+  return (
+    typeof record.rate === "number" &&
+    typeof record.date === "string" &&
+    /^\d{4}-\d{2}-\d{2}$/.test(record.date)
+  );
 }
 
 function parseRequest(raw: string): AiAnalysisRequest {
@@ -47,8 +59,8 @@ function parseRequest(raw: string): AiAnalysisRequest {
   if (!CURRENCY_CODE.test(base) || !CURRENCY_CODE.test(quote) || base === quote) {
     throw new AiAnalysisError("Invalid currency pair.", 400);
   }
-  if (!rangeLabel) {
-    throw new AiAnalysisError("Missing range label.", 400);
+  if (!RANGES.has(rangeLabel)) {
+    throw new AiAnalysisError("Invalid range.", 400);
   }
   if (!Number.isFinite(currentRate) || !Number.isFinite(openRate) || !Number.isFinite(changePct)) {
     throw new AiAnalysisError("Invalid rate values.", 400);
@@ -56,7 +68,7 @@ function parseRequest(raw: string): AiAnalysisRequest {
   if (rates.length === 0) {
     throw new AiAnalysisError("No historical data supplied.", 400);
   }
-  if (rates.some((point) => !point || typeof point.date !== "string" || typeof point.rate !== "number")) {
+  if (rates.length > MAX_POINTS || rates.some((point) => !isValidPoint(point))) {
     throw new AiAnalysisError("Invalid historical data points.", 400);
   }
 
