@@ -39,8 +39,6 @@ export function CurrencyPicker({
 
       <div
         id={listId}
-        role="listbox"
-        aria-label="Currencies"
         className="mt-2 flex max-h-98.5 flex-col gap-1 overflow-y-auto overflow-x-hidden no-scrollbar">
         {isLoading ? (
           <p className="px-2 py-5 text-center text-xs leading-tight tracking-[0.5px] text-neutral-200">

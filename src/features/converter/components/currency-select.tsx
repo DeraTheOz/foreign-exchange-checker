@@ -14,6 +14,7 @@ interface CurrencySelectProps {
 
 export function CurrencySelect({ field, form }: CurrencySelectProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const listId = useId();
 
   const open = useConverterStore((s) => s.pickerTarget) === field;
@@ -32,7 +33,10 @@ export function CurrencySelect({ field, form }: CurrencySelectProps) {
       }
     };
     const handleKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") closePicker();
+      if (event.key === "Escape") {
+        closePicker();
+        triggerRef.current?.focus();
+      }
     };
     document.addEventListener("mousedown", handleClick);
     document.addEventListener("keydown", handleKey);
@@ -50,6 +54,7 @@ export function CurrencySelect({ field, form }: CurrencySelectProps) {
       setTo(code);
     }
     closePicker();
+    triggerRef.current?.focus();
   };
 
   const togglePicker = () => {
@@ -63,12 +68,12 @@ export function CurrencySelect({ field, form }: CurrencySelectProps) {
   return (
     <div ref={containerRef} className="relative min-w-24 flex-[1_0_6rem]">
       <button
+        ref={triggerRef}
         type="button"
         onClick={togglePicker}
-        aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={listId}
-        aria-label={field}
+        aria-label={`${field === "from" ? "Send" : "Receive"} currency, ${selected}`}
         className="flex h-10 w-full min-w-24 cursor-pointer items-center justify-center gap-2 rounded-lg border border-neutral-400 bg-neutral-500 text-sm leading-tight tracking-widest text-neutral-50 focus-visible:outline-2 focus-visible:outline-primary">
         <Flag code={selected} />
         <span>{selected}</span>

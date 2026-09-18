@@ -16,8 +16,6 @@ export function CurrencyPickerItem({
   return (
     <button
       type="button"
-      role="option"
-      aria-selected={selected}
       onClick={() => onSelect(currency.code)}
       className="flex min-h-11.75 w-full items-center gap-3 rounded border border-neutral-600 bg-neutral-600 px-2.25 py-3.25 text-left hover:border-neutral-500 hover:bg-neutral-500 focus-visible:relative">
       <CurrencyFlag currency={currency} />
@@ -27,6 +25,9 @@ export function CurrencyPickerItem({
       <span className="min-w-0 flex-1 truncate pt-0.5 text-xs leading-tight tracking-[0.5px] text-neutral-200">
         {currency.name}
       </span>
+      {selected ? (
+        <span className="sr-only">Selected</span>
+      ) : null}
       {selected ? (
         <Check className="h-3 w-3 shrink-0 text-neutral-50" aria-hidden />
       ) : null}
